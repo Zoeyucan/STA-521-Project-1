@@ -11,10 +11,11 @@ knitr::opts_chunk$set(include=TRUE,echo = TRUE, message = FALSE, warning = FALSE
 @
 
 \title{STA 521: Project 1 Redwood Data}
-\author{Release date: \textbf{Thursday, Sep. 08}}
-\date{Due by: \textbf{3 PM, Thursday, Oct. 13}}
+\author{Xinyi Sheng(xs110) Yucan Zeng(yc808)}
+\date{}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \maketitle
 
