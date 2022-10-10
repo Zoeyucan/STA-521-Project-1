@@ -11,11 +11,12 @@ knitr::opts_chunk$set(include=TRUE,echo = TRUE, message = FALSE, warning = FALSE
 @
 
 \title{STA 521: Project 1 Redwood Data}
-\author{Xinyi Sheng(xs110) Yucan Zeng(yz808)}
+\author{Xinyi Sheng(xs110) Yucan Zeng(yc808)}
 \date{}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
+
 
 \maketitle
 
@@ -59,6 +60,205 @@ Explain to your teammate the main conclusion of the paper and how the sensors in
 \item Write a summary (1/2 page - 1 page) about the data collection. At least the following points should be covered: How are the sensors deployed? What is the duration of the data recording? What are the main variables of interest? What is the difference between the data in \textbf{sonoma-data-log.csv} and that in \textbf{sonoma-data-net.csv}.
 \end{enumerate}
 
+ <<>>=
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+require(tibble)
+library(hrbrthemes)
+library(scales)
+library(units)
+library(hablar)
+@
+
+<<>>=
+#read data
+df_all = read.csv("data/sonoma-data-all.csv",header=TRUE,stringsAsFactors=FALSE)
+df_loc = read.csv('data/mote-location-data.txt',header=TRUE,stringsAsFactors=FALSE,sep='')
+# df_all$result_date = format(as.POSIXct(df_all$result_time), format="%Y-%m-%d")
+# df_all$result_second = format(as.POSIXct(df_all$result_time), format="%H:%M:%S")
+df_net = read.csv("data/sonoma-data-net.csv",header=TRUE,stringsAsFactors=FALSE)
+df_log = read.csv("data/sonoma-data-log.csv",header=TRUE,stringsAsFactors=FALSE)
+
+
+#change dataframe to tibble
+df_all = tibble(df_all)
+df_loc = tibble(df_loc)
+df_net = tibble(df_net)
+df_log = tibble(df_log)
+
+#add a new column to distinguish between net and log
+df_net = df_net%>%mutate(type = 'net')
+df_log = df_log%>%mutate(type = 'log')
+
+#correct log time
+df_net = df_net%>%mutate(actual_time= result_time)
+df_log = df_log%>%mutate(actual_time= as.POSIXct("2004-04-27 17:10:00")+epoch*300)
+
+#extract date
+df_net$actual_date = as.Date(format(as.POSIXct(df_net$actual_time), format="%Y-%m-%d"))
+df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%m-%d"))
+
+#merge df_all and df_loc
+df_all_loc = df_all%>%left_join(df_loc,by = c("nodeid"="ID"))
+
+#merge df_log and df_net
+df_net_log = rbind(df_log, df_net)
+
+#Drop NAs
+df_net_log_NA = df_net_log%>%na.omit()
+
+#Process the data using the data range given in the article(40w->25w)
+##voltage in [2.4,3]
+##humidity in [0, 100]
+df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>0,humidity<100)
+df_log_filter = df_log%>%filter(humidity>0,humidity<100)
+#use inner join to filter outlier nodeid(41w->40w)
+df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
+
+@
+
+<<>>=
+#correct time
+# Dates <- read.table("data/sonoma-dates", sep = " ", fill=TRUE)
+# Dates <- as.data.frame(t(Dates))
+# colnames(Dates) <- Dates[1,]
+# Dates <- Dates[-1:-2,]
+# Dates$epochNums<-gsub("[","",as.character(Dates$epochNums), fixed=TRUE)
+# Dates$epochNums<-gsub("]","",as.character(Dates$epochNums), fixed=TRUE)
+# Dates$epochDates<-gsub("{","",as.character(Dates$epochDates), fixed=TRUE)
+# Dates$epochDates<-gsub("}","",as.character(Dates$epochDates), fixed=TRUE)
+# Dates$epochDays<-gsub("[","",as.character(Dates$epochDays), fixed=TRUE)
+# Dates$epochDays<-gsub("]","",as.character(Dates$epochDays), fixed=TRUE)
+@
+
+<<>>=
+#histogram
+#Use origin data
+#1)overall review
+# Represent it
+p <- df_net_log %>%
+  ggplot(aes(x=actual_date, fill=type)) +
+    geom_bar( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="") +
+# Format : Week
+scale_x_date(labels = date_format("%m/%d"),breaks = '5 days') +
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Data Distribution over Time by Log and Net")
+p
+@
+
+<<>>=
+#histogram
+#2)voltage
+p2 <- df_net_log %>%filter((type == 'log' & voltage<3 & voltage>2.4))%>%
+  ggplot(aes(x=voltage, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2")) +
+    theme_ipsum() +
+    labs(fill="")
+p2
+p2_ <- df_net_log %>%filter((type == 'net' & voltage<250 & voltage>200))%>%
+  ggplot(aes(x=voltage, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c( "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p2_
+@
+
+<<>>=
+#histogram
+#3)humidity
+p3 <- df_net_log %>%filter(humidity>0 & humidity<100)%>%
+  ggplot(aes(x=humidity, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p3
+@
+
+<<>>=
+#histogram
+#4)temperature
+p4 <- df_net_log %>%filter(humid_temp>0&humid_temp<32.6)%>%
+  ggplot(aes(x=humid_temp, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p4
+@
+
+<<>>=
+#histogram
+#5)hamatop
+p5 <- df_net_log %>%mutate(hamatop_ppfd=0.0185*hamatop)%>%filter(hamatop_ppfd>=0&hamatop_ppfd<=2154)%>%
+  ggplot(aes(x=hamatop_ppfd, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p5
+@
+
+
+<<>>=
+#histogram
+#5)hamabot
+p6 <- df_net_log %>%mutate(hamabot_ppfd=0.0185*hamabot)%>%filter(hamabot_ppfd>=0&hamabot_ppfd<=180)%>%
+  ggplot(aes(x=hamabot_ppfd, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p6
+@
+
+
+
+\subsection{(2)}
+
+<<>>=
+#read data
+df_net = read.csv("data/sonoma-data-net.csv",header=TRUE,stringsAsFactors=FALSE)
+df_log = read.csv("data/sonoma-data-log.csv",header=TRUE,stringsAsFactors=FALSE)
+
+#concert to tibble
+df_net = tibble(df_net)
+df_log = tibble(df_log)
+
+#extract date
+df_net$actual_date = as.Date(format(as.POSIXct(df_net$actual_time), format="%Y-%m-%d"))
+df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%m-%d"))
+
+#merge df_log and df_net
+df_net_log = rbind(df_log, df_net)
+
+#Drop NAs
+df_net_log_NA = df_net_log%>%na.omit()
+
+#remove duplicate
+
+df_net_log_NA_dup = df_net_log_NA[!duplicated(df_net_log_NA$epoch,df_net_log_NA$nodeid), ]
+
+
+#Process the data using the data range given in the article(40w->25w)
+##voltage in [2.4,3]
+##humidity in [0, 100]
+df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>0,humidity<100)
+df_log_filter = df_log%>%filter(humidity>0,humidity<100)
+
+#use inner join to filter outlier nodeid(41w->40w)
+df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
+
+@
+
+
+
 \section{Data cleaning (40 pts)}
 This data set is quite raw - it contains some gross outliers, inconsistencies, and lots of missing values. Read the \textbf{Outlier rejection} section in the paper carefully and critically. You don't have to bindly follow their data cleaning method.
 
@@ -70,6 +270,8 @@ The file \textbf{sonoma-data-all.csv} is a simple concatenation of the two files
 \item Use histogram and quantiles to visually identify easy outliers for each of the four variables: humidity, humid temp, hamatop, hamabot. And remove them. Comment on the rationality behind your removal.
 \item (Bonus) Discuss other possible outliers and explain your reason why it is better to remove them than to keep them.
 \end{enumerate}
+
+
 
 \section{Data Exploration (40 pts)}
 \begin{enumerate}[label=(\alph*)]
