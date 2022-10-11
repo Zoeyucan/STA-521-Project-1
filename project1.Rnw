@@ -350,6 +350,17 @@ ggplot(data=df_out_3_2, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(
 ggplot(data=df_out_3_3, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~ x, method = "lm",col = 'black')
 @
 
+<<>>=
+#correlation
+colnames(df_out_3_1) <- c("humidity","humid_temp", "hamatop", "hamabotl")
+summary(df_out_3_1)
+cor(df_out_3_1) #erroer:df_out_3_1
+library(ggcorrplot)
+corrplot(data=df_out_3_1, tl.col = "brown", tl.srt = 30, bg = "White",
+         title = "\n\n Correlation Plot Of Gambling Data",
+         type = "full")
+@
+
 
 \subsection{(2)}
 
