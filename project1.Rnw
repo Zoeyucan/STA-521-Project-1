@@ -267,11 +267,55 @@ df_net_log_NA_dup_volt_filter_loc = df_net_log_NA_dup_volt_filter%>%inner_join(d
 # loading data set and storing it in ds variable
 
 df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humidity, fill = type)) +
-geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of humidity')
 
 @
 
 <<>>=
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humid_temp, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of temperature')
+@
+
+<<>>=
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamatop, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamatop_ppfd')
+@
+
+<<>>=
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamabot, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamabot_ppfd')
+@
+
+<<>>=
+#remove outliers
+df_net_log_NA_dup_volt_filter_loc %>%
+  group_by(type) %>%
+  summarise(quantile(humidity,0.02)
+)
+
+df_net_log_NA_dup_volt_filter_loc %>%
+  group_by(type) %>%
+  summarise(quantile(humid_temp,0.98)
+)
+
+df_net_log_NA_dup_volt_filter_loc %>%
+  group_by(type) %>%
+  summarise(quantile(0.0185*hamatop,0.98)
+)
+
+df_net_log_NA_dup_volt_filter_loc %>%
+  group_by(type) %>%
+  summarise(quantile(0.0185*hamabot,0.98)
+)
+@
+
+<<>>=
+#filter 
+#net humidity>53.1
+#log temperature<25.7, net temperature<28.3
+#log hamatop_ppfd<1912, net hamatop_ppfd<1897
+#log hamabot_ppfd<60.2, net hamabot_ppfd<82.9
+df_out = df_net_log_NA_dup_volt_filter_loc%>%filter(humidity>53.1&type == 'net'|type == 'log')%>%filter(humid_temp<25.7&type == 'log'|type == 'net')%>%filter(humid_temp<28.3&type == 'net'|type == 'log')%>%filter(0.0185*hamatop<1912&type == 'log'|type == 'net')%>%filter(0.0185*hamatop<1897&type == 'net'|type == 'log')%>%filter(0.0185*hamabot<60.2&type == 'log'|type == 'net')%>%filter(0.0185*hamabot<82.9&type == 'net'|type == 'log')
 
 @
 
