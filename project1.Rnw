@@ -218,6 +218,14 @@ df_loc = read.csv('data/mote-location-data.txt',header=TRUE,stringsAsFactors=FAL
 df_net = tibble(df_net)
 df_log = tibble(df_log)
 
+#add a new column to distinguish between net and log
+df_net = df_net%>%mutate(type = 'net')
+df_log = df_log%>%mutate(type = 'log')
+
+#correct log time
+df_net = df_net%>%mutate(actual_time= result_time)
+df_log = df_log%>%mutate(actual_time= as.POSIXct("2004-04-27 17:10:00")+epoch*300)
+
 #extract date
 df_net$actual_date = as.Date(format(as.POSIXct(df_net$actual_time), format="%Y-%m-%d"))
 df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%m-%d"))
@@ -229,30 +237,39 @@ df_net_log = rbind(df_log, df_net)
 df_net_log_NA = df_net_log%>%na.omit()
 
 #remove duplicate
-
 df_net_log_NA_dup = 
-  df_net_log_NA%>%inner_join(
-    df_net_log_NA%>%distinct(epoch, nodeid),
-    by = c("nodeid"="nodeid","epoch"="epoch")
-    )
-  
+  df_net_log_NA[!duplicated(df_net_log_NA[,c(2,3)]),]
 
 #Handle voltage outliers
-
 df_net_log_NA_dup_volt = df_net_log_NA_dup%>%
   mutate(voltage_new = ifelse(type == 'net', voltage*5/512, voltage))
 
-
 #Process the data using the data range given in the article(40w->25w)
 ##voltage in [2.4,3]
-##humidity in [0, 100]
-df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>16.4,humidity<100.2)
-df_log_filter = df_log%>%filter(humidity>16.4,humidity<100.2)
+##humidity in [16.4, 100.2]
+#ppfd of hamatop in[0,2154]
+#ppfd of hamabot in[0,180]
+df_net_log_NA_dup_volt_filter = df_net_log_NA_dup_volt%>%filter(
+                                                voltage_new<3,voltage_new>2.4,
+                                              humidity>16.4,humidity<100.2,
+                                              humid_temp>6.6,humid_temp<32.6,
+                                              0.0185*hamatop<2154,hamatop>=0,
+                                              0.0185*hamabot<180,hamabot>=0)
 
 #use inner join to filter outlier nodeid(41w->40w)
-df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
+df_net_log_NA_dup_volt_filter_loc = df_net_log_NA_dup_volt_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
 @
 
+<<>>=
+#boxplot
+#huimidity, temperture, hamatop, hamabot
+
+# loading data set and storing it in ds variable
+
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humidity, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")
+
+@
 
 <<>>=
 
