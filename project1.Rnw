@@ -238,11 +238,11 @@ df_net_log_NA = df_net_log%>%na.omit()
 
 #remove duplicate
 df_net_log_NA_dup = 
-  df_net_log_NA[!duplicated(df_net_log_NA[,c(2,3)]),]
+  df_net_log_NA[!duplicated(df_net_log_NA[,c(2,3,12)]),]
 
 #Handle voltage outliers
 df_net_log_NA_dup_volt = df_net_log_NA_dup%>%
-  mutate(voltage_new = ifelse(type == 'net', voltage*5/512, voltage))
+  mutate(voltage_new = ifelse(type == 'net', voltage/83, voltage))
 
 #Process the data using the data range given in the article(40w->25w)
 ##voltage in [2.4,3]
@@ -318,6 +318,41 @@ df_net_log_NA_dup_volt_filter_loc %>%
 df_out = df_net_log_NA_dup_volt_filter_loc%>%filter(humidity>53.1&type == 'net'|type == 'log')%>%filter(humid_temp<25.7&type == 'log'|type == 'net')%>%filter(humid_temp<28.3&type == 'net'|type == 'log')%>%filter(0.0185*hamatop<1912&type == 'log'|type == 'net')%>%filter(0.0185*hamatop<1897&type == 'net'|type == 'log')%>%filter(0.0185*hamabot<60.2&type == 'log'|type == 'net')%>%filter(0.0185*hamabot<82.9&type == 'net'|type == 'log')
 
 @
+
+
+
+\subsection{3}
+<<>>=
+df_out$hour = format(as.POSIXct(df_out$actual_time), format="%H")
+df_out_3_1 = df_out %>%
+  filter(hour<=18&hour>=10)
+df_out_3_2 = df_out %>%
+  filter(as.numeric(hour)<=9&as.numeric(hour)>=6)
+df_out_3_3 = df_out %>%
+  filter(as.numeric(hour)<=20&as.numeric(hour)>=17)
+@
+
+
+<<>>=
+#hour<=18&hour>=10
+ggplot(data=df_out_3_1, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~ x, method = "lm",col = 'black')
+@
+
+
+<<>>=
+#as.numeric(hour)<=9&as.numeric(hour)>=6
+ggplot(data=df_out_3_2, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~log(x), method = "lm",col = 'black')
+@
+
+
+<<>>=
+#as.numeric(hour)<=20&as.numeric(hour)>=17
+ggplot(data=df_out_3_3, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~ x, method = "lm",col = 'black')
+@
+
+
+\subsection{(2)}
+
 
 \section{Data cleaning (40 pts)}
 This data set is quite raw - it contains some gross outliers, inconsistencies, and lots of missing values. Read the \textbf{Outlier rejection} section in the paper carefully and critically. You don't have to bindly follow their data cleaning method.
