@@ -111,25 +111,11 @@ df_net_log_NA = df_net_log%>%na.omit()
 #Process the data using the data range given in the article(40w->25w)
 ##voltage in [2.4,3]
 ##humidity in [0, 100]
-df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>0,humidity<100)
-df_log_filter = df_log%>%filter(humidity>0,humidity<100)
+df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>16.4,humidity<102)
+df_log_filter = df_log%>%filter(humidity>16.4,humidity<100.2)
 #use inner join to filter outlier nodeid(41w->40w)
 df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
 
-@
-
-<<>>=
-#correct time
-# Dates <- read.table("data/sonoma-dates", sep = " ", fill=TRUE)
-# Dates <- as.data.frame(t(Dates))
-# colnames(Dates) <- Dates[1,]
-# Dates <- Dates[-1:-2,]
-# Dates$epochNums<-gsub("[","",as.character(Dates$epochNums), fixed=TRUE)
-# Dates$epochNums<-gsub("]","",as.character(Dates$epochNums), fixed=TRUE)
-# Dates$epochDates<-gsub("{","",as.character(Dates$epochDates), fixed=TRUE)
-# Dates$epochDates<-gsub("}","",as.character(Dates$epochDates), fixed=TRUE)
-# Dates$epochDays<-gsub("[","",as.character(Dates$epochDays), fixed=TRUE)
-# Dates$epochDays<-gsub("]","",as.character(Dates$epochDays), fixed=TRUE)
 @
 
 <<>>=
@@ -172,7 +158,7 @@ p2_
 <<>>=
 #histogram
 #3)humidity
-p3 <- df_net_log %>%filter(humidity>0 & humidity<100)%>%
+p3 <- df_net_log %>%filter(humidity>16.4 & humidity<100.2)%>%
   ggplot(aes(x=humidity, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
@@ -184,7 +170,7 @@ p3
 <<>>=
 #histogram
 #4)temperature
-p4 <- df_net_log %>%filter(humid_temp>0&humid_temp<32.6)%>%
+p4 <- df_net_log %>%filter(humid_temp>6.6&humid_temp<32.6)%>%
   ggplot(aes(x=humid_temp, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
@@ -226,6 +212,7 @@ p6
 #read data
 df_net = read.csv("data/sonoma-data-net.csv",header=TRUE,stringsAsFactors=FALSE)
 df_log = read.csv("data/sonoma-data-log.csv",header=TRUE,stringsAsFactors=FALSE)
+df_loc = read.csv('data/mote-location-data.txt',header=TRUE,stringsAsFactors=FALSE,sep='')
 
 #concert to tibble
 df_net = tibble(df_net)
@@ -243,21 +230,33 @@ df_net_log_NA = df_net_log%>%na.omit()
 
 #remove duplicate
 
-df_net_log_NA_dup = df_net_log_NA[!duplicated(df_net_log_NA$epoch,df_net_log_NA$nodeid), ]
+df_net_log_NA_dup = 
+  df_net_log_NA%>%inner_join(
+    df_net_log_NA%>%distinct(epoch, nodeid),
+    by = c("nodeid"="nodeid","epoch"="epoch")
+    )
+  
+
+#Handle voltage outliers
+
+df_net_log_NA_dup_volt = df_net_log_NA_dup%>%
+  mutate(voltage_new = ifelse(type == 'net', voltage*5/512, voltage))
 
 
 #Process the data using the data range given in the article(40w->25w)
 ##voltage in [2.4,3]
 ##humidity in [0, 100]
-df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>0,humidity<100)
-df_log_filter = df_log%>%filter(humidity>0,humidity<100)
+df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>16.4,humidity<100.2)
+df_log_filter = df_log%>%filter(humidity>16.4,humidity<100.2)
 
 #use inner join to filter outlier nodeid(41w->40w)
 df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
-
 @
 
 
+<<>>=
+
+@
 
 \section{Data cleaning (40 pts)}
 This data set is quite raw - it contains some gross outliers, inconsistencies, and lots of missing values. Read the \textbf{Outlier rejection} section in the paper carefully and critically. You don't have to bindly follow their data cleaning method.
