@@ -102,7 +102,7 @@ df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%
 
 #merge df_all and df_loc
 df_all_loc = df_all%>%left_join(df_loc,by = c("nodeid"="ID"))
-
+df_net_log_loc =  df_net_log%>%left_join(df_loc,by = c("nodeid"="ID"))
 #merge df_log and df_net
 df_net_log = rbind(df_log, df_net)
 
@@ -119,6 +119,7 @@ df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("node
 
 @
 
+2(a)
 <<>>=
 #histogram
 #Use origin data
@@ -129,7 +130,6 @@ p <- df_net_log %>%
     geom_bar( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     theme_ipsum() +
-    labs(fill="") +
 # Format : Week
 scale_x_date(labels = date_format("%m/%d"),breaks = '5 days') +
   theme(axis.text.x = element_text(angle=45))+
@@ -207,7 +207,7 @@ p6
 
 
 
-\subsection{(2)}
+\subsection{(2b)}
 
 <<>>=
 #read data
@@ -256,9 +256,62 @@ df_net_log_NA_dup_volt_filter = df_net_log_NA_dup_volt%>%filter(
                                               humid_temp>6.6,humid_temp<32.6,
                                               0.0185*hamatop<2154,hamatop>=0,
                                               0.0185*hamabot<180,hamabot>=0)
+@
 
+2c
+<<>>=
 #use inner join to filter outlier nodeid(41w->40w)
 df_net_log_NA_dup_volt_filter_loc = df_net_log_NA_dup_volt_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
+@
+2d
+
+<<>>=
+#histogram
+#1)humidity
+h1 <- df_net_log %>%
+  ggplot(aes(x=humidity, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h1
+@
+
+<<>>=
+#histogram
+#2)temperature
+h2 <- df_net_log %>%
+  ggplot(aes(x=humid_temp, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h2
+@
+
+<<>>=
+#histogram
+#3)hamatop
+h3 <- df_net_log %>%
+  ggplot(aes(x=hamatop, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h3
+@
+
+
+<<>>=
+#histogram
+#4)hamabot
+h4 <- df_net_log %>%
+  ggplot(aes(x=hamabot, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h4
 @
 
 <<>>=
@@ -322,7 +375,7 @@ df_out = df_net_log_NA_dup_volt_filter_loc%>%filter(humidity>53.1&type == 'net'|
 
 
 
-\subsection{3}
+\subsection{3a}
 <<>>=
 df_out$hour = format(as.POSIXct(df_out$actual_time), format="%H")
 df_out_3_1 = df_out %>%
@@ -335,31 +388,120 @@ df_out_3_3 = df_out %>%
 
 
 <<>>=
-#hour<=18&hour>=10
+#scatter plot
+#hour<=18 & hour>=10
 ggplot(data=df_out_3_1, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~ x, method = "lm",col = 'black')
 @
 
 
 <<>>=
-#as.numeric(hour)<=9&as.numeric(hour)>=6
+#scatter plot
+#as.numeric(hour)<=9 & as.numeric(hour)>=6
 ggplot(data=df_out_3_2, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~log(x), method = "lm",col = 'black')
 @
 
 
 <<>>=
-#as.numeric(hour)<=20&as.numeric(hour)>=17
+#scatter plot
+#as.numeric(hour)<=20 & as.numeric(hour)>=17
 ggplot(data=df_out_3_3, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(size=3,alpha = 0.5)+geom_smooth(formula = y ~ x, method = "lm",col = 'black')
+@
+\subsection{3b}
+<<>>=
+#correlation
+corr_noon = df_out_3_1%>%select("humidity","humid_temp", "hamatop", "hamabot")
+cor(corr_noon) 
+ggcorrplot(cor(corr_noon) , method = "circle",colors = c("#6D9EC1", "white", "#E46726"))
 @
 
 <<>>=
 #correlation
-corr = df_out_3_1%>%select("humidity","humid_temp", "hamatop", "hamabot")
-cor(corr) 
-ggcorrplot(cor(corr) , method = "circle",colors = c("#6D9EC1", "white", "#E46726"))
+corr_sunrise = df_out_3_2%>%select("humidity","humid_temp", "hamatop", "hamabot")
+cor(corr_sunrise) 
+ggcorrplot(cor(corr_sunrise) , method = "circle",colors = c("#6D9EC1", "white", "#E46726"))
 @
 
+<<>>=
+corr_sunset = df_out_3_3%>%select("humidity","humid_temp", "hamatop", "hamabot")
+cor(corr_sunset) 
+ggcorrplot(cor(corr_sunset) , method = "circle",colors = c("#6D9EC1", "white", "#E46726"))
+@
+\subsection{3c}
+<<>>=
+#use cleaned data df_out to plot time series 
+#processed data
+df_out_height = df_out%>%mutate(height_range = ifelse(Height>10 & Height<20, "10-20m",
+                                     ifelse(Height>=20 & Height<30, "20-30m",
+                                            ifelse(Height>=30 & Height<40, "30-40m",
+                                                   ifelse(Height>=40 & Height<50, "40-50m", ifelse(Height>=50 & Height<60, "50-60m","60+m"))))))
 
-\subsection{(2)}
+#original data
+df_net_log_loc_height = df_net_log_loc%>%mutate(height_range = ifelse(Height>10 & Height<20, "10-20m",
+                                     ifelse(Height>=20 & Height<30, "20-30m",
+                                            ifelse(Height>=30 & Height<40, "30-40m",
+                                                   ifelse(Height>=40 & Height<50, "40-50m", ifelse(Height>=50 & Height<60, "50-60m","60+m"))))))
+
+#plot
+#humidity
+ggplot(df_out_height, aes(x = actual_time, y = humidity)) + 
+  geom_line(aes(color = height_range), size = 1) +
+  scale_color_manual(values =   c( "#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")) +
+  theme_minimal()+ylim(-5,105)+# Format : Week
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Time Series of Humidity by Height")
+@
+
+<<>>=
+#temperature
+ggplot(df_out_height, aes(x = actual_time, y = humid_temp)) + 
+  geom_line(aes(color = height_range), size = 1) +
+  scale_color_manual(values =   c( "#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")) +
+  theme_minimal()+ylim(0,30)+
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Time Series of Temperature by Height")
+@
+
+<<>>=
+#hamatop
+ggplot(df_out_height, aes(x = actual_time, y = hamatop*0.0185)) + 
+  geom_line(aes(color = height_range), size = 1) +
+  scale_color_manual(values =   c( "#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")) +
+  theme_minimal()+ylim(-100,2000)+
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Time Series of Hamatop by Height")
+@
+
+<<>>=
+#hamabot
+ggplot(df_out_height, aes(x = actual_time, y = hamabot*0.0185)) + 
+  geom_line(aes(color = height_range), size = 1) +
+  scale_color_manual(values =   c( "#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")) +
+  theme_minimal()+ylim(-10,100)+
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Time Series of Hamabot by Height")
+@
+
+\subsection{3d}
+<<>>=
+df_pca = df_out_height%>%mutate(hamatop_ppfd = 0.0185*hamatop,hamabot_ppfd = 0.0185*hamabot,height = as.numeric(as.factor(height_range)))%>%select(humidity,humid_temp,hamatop_ppfd,hamabot_ppfd,height)
+#perform PCA
+results <- prcomp(df_pca, scale = TRUE)
+
+#calculate total variance explained by each principal component
+var_explained = results$sdev^2 / sum(results$sdev^2)
+var_explained
+#create scree plot
+qplot(c(1:5), cumsum(var_explained)) + 
+  geom_line() + 
+  xlab("Principal Component") + 
+  ylab("Total Percentage Variance") +
+  ggtitle("Scree Plot") +
+  ylim(0, 1)
+@
+
+\section{4a}
+
+
 
 
 \section{Data cleaning (40 pts)}
