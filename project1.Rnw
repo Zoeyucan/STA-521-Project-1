@@ -69,6 +69,7 @@ library(hrbrthemes)
 library(scales)
 library(units)
 library(hablar)
+library(ggcorrplot)
 @
 
 <<>>=
@@ -352,13 +353,9 @@ ggplot(data=df_out_3_3, aes(x=humidity, y=humid_temp,color = 'red'))+geom_point(
 
 <<>>=
 #correlation
-colnames(df_out_3_1) <- c("humidity","humid_temp", "hamatop", "hamabotl")
-summary(df_out_3_1)
-cor(df_out_3_1) #erroer:df_out_3_1
-library(ggcorrplot)
-corrplot(data=df_out_3_1, tl.col = "brown", tl.srt = 30, bg = "White",
-         title = "\n\n Correlation Plot Of Gambling Data",
-         type = "full")
+corr = df_out_3_1%>%select("humidity","humid_temp", "hamatop", "hamabot")
+cor(corr) 
+ggcorrplot(cor(corr) , method = "circle",colors = c("#6D9EC1", "white", "#E46726"))
 @
 
 
