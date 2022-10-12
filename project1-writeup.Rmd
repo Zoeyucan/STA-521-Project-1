@@ -6,25 +6,115 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+require(tibble)
+library(hrbrthemes)
+library(scales)
+library(units)
+library(hablar)
+library(ggcorrplot)
+library(plotly)
+library(ClusterR)
+library(ggpubr)
+library(maditr)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Abstract
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+While the original 2005 paper was a preliminary study of the macroclimate of Sequoia trees along the California coast using wireless sensor networks, this report thoroughly examines the Sequoia dataset in a different way, focusing mainly on the preparation and cleaning before starting the data analysis. Five sections are included: raw data collection, data cleaning, data exploration, interesting findings, and conclusions.
+
+# **1. Data Collection**
+
+# **Paper Summary**
+
+The thesis focuses on the ecophysiology of Sonoma redwood trees in California using wireless sensor networks to explore the complex spatial variability and temporal dynamics of microclimate around coastal redwood trees. Air temperature, relative humidity, and photosynthetically active solar radiation (PAR) were monitored every 5 min for 2 m for 44 days during the early summer of the redwood tree's life by placing magnetic suction sensors on a 70 m high redwood tree. The paper describes the placement of magnetic suction sensors, one sensor every 2 m from 15 m to 70 m above ground. Since the canopy is thicker on the western side of the redwood tree, the sensors this to be placed on the western side. Sensors were also placed at 0.1-1.0 m from the trunk to ensure that microclimate trends affecting the trees could be captured directly. And TASK and TinySQL software were used as the framework for collecting and processing the data. The first phase investigates the extent and distribution of the data independent of time and space by transforming a 3-dimensional dataset with a temporal dimension, a spatial dimension, and a dimension related to the sensor values themselves into a 1-dimensional dataset, the second phase adds a temporal dimension to investigate the temporal trend of the data can be seen in the weather over the time scale with a temporal gradient, and the third phase investigates the spatial trend of the data on the basis of the 1-dimensional dataset. The third stage examines the spatial trend of the data based on a 1-dimensional dataset, where the trend in height helps to derive a theoretical model of canopy density and the existence of a spatial gradient in tree height, and the last stage examines the three-dimensional data, where the sensor values are contrasted by shades of color in different times and spaces. Through humidity graphs, the dense canopy can have a buffering effect on the lower part of the tree.
+Sensor Deployment Mode
+Time: Early summer for one month, with all sensors sampled every 5 minutes. Early summer contains the most dynamic microclimate changes. We decided that sampling every 5 minutes would be sufficient to capture this variability. Vertical distance: from 15 meters from the ground to 70 meters from the ground, with a spacing of about 2 meters between nodes. This spatial density ensured that we could cap the gradients in sufficient detail to interpolate with accuracy. envolop starts at 15 m because most of the foliage is in the upper part of the tree. Angular position: west side of the tree. The western side of the tree has a thicker canopy and provides the greatest buffer against direct environmental impacts. Radial distance: 0.1-1.0 m from the trunk. These nodes were placed very close to the trunk to ensure that we capture microclimate trends that directly affect the tree, rather than the broader climate. Figure 1 shows the final location of each mote in the tree. We also placed several nodes outside of the angular and radial envelopes to monitor microclimate near other previously installed biosensing devices.
+
+# **Duration of Data**
+
+From 4/27/2004 at 5:10 p.m. (epoch 1) to 6/10/2004 at 2 p.m., a little over 44 days' worth of data were collected (epoch 12635). Every five minutes, measurements were obtained, and battery-operated nodes were duty cycled to save energy when not in use. They were switched on for four seconds to take measurements before being turned off until the next reading.
+
+# **Main Variable**
+
+Traditional climatic factors such as temperature, humidity, and light levels were of interest to researchers. These variables were monitored using photosynthetically active radiation (PAR). Two measurements were made of light between the wavelengths of 350 nm and 700 nm: one was incident (direct), which gives data on the energy available for photosynthesis, and the other was reflected (ambient), which was used to validate observations by satellites.
+
+# **Difference between the Dataset**
+
+Log is retrieved from flash log after the deployment. net is retrieved from wireless internet. to provide backup in case of network failure and to provide a basis for analyzing the performance of network work, we extended the TASK framework to include a local data log system. The data logger records every read performed by each query before the reads are passed to the multi-hop routing layer and stops recording when the 512kB flash chip is full. After deployment, we connected each mote to a serial connection and then installed a new program to transfer the contents of the flash memory over the serial link. We chose to include a full data logger because we knew the capacity of the flash would be sufficient for the duration of our deployment. Longer deployments should consider including a storage system that supports multiple resolutions [6] or one that can be partially retrieved over the network. Each reading received from the multi-hop network is stored in a database management system running on the Stargate gateway node as a staging area until we retrieve the results. We retested some results in real time directly over a GPRS cellular modem connection and periodically connected the laptop to the Stargate in order to download the rest. the GPRS connection was also used to remotely restart the gateway node in the event of a failure.
+
+# **Data Cleaning**
+
+```{r}
+#read data
+df_all = read.csv("data/sonoma-data-all.csv",header=TRUE,stringsAsFactors=FALSE)
+df_loc = read.csv('data/mote-location-data.txt',header=TRUE,stringsAsFactors=FALSE,sep='')
+# df_all$result_date = format(as.POSIXct(df_all$result_time), format="%Y-%m-%d")
+# df_all$result_second = format(as.POSIXct(df_all$result_time), format="%H:%M:%S")
+df_net = read.csv("data/sonoma-data-net.csv",header=TRUE,stringsAsFactors=FALSE)
+df_log = read.csv("data/sonoma-data-log.csv",header=TRUE,stringsAsFactors=FALSE)
+
+
+#change dataframe to tibble
+df_all = tibble(df_all)
+df_loc = tibble(df_loc)
+df_net = tibble(df_net)
+df_log = tibble(df_log)
+
+#add a new column to distinguish between net and log
+df_net = df_net%>%mutate(type = 'net')
+df_log = df_log%>%mutate(type = 'log')
+
+#correct log time
+df_net = df_net%>%mutate(actual_time= result_time)
+df_log = df_log%>%mutate(actual_time= as.POSIXct("2004-04-27 17:10:00")+epoch*300)
+
+#extract date
+df_net$actual_date = as.Date(format(as.POSIXct(df_net$actual_time), format="%Y-%m-%d"))
+df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%m-%d"))
+
+#merge df_log and df_net
+df_net_log = rbind(df_log, df_net)
+
+#merge df_all and df_loc
+df_all_loc = df_all%>%left_join(df_loc,by = c("nodeid"="ID"))
+df_net_log_loc =  df_net_log%>%left_join(df_loc,by = c("nodeid"="ID"))
+
+
+#Drop NAs
+df_net_log_NA = df_net_log%>%na.omit()
+
+#Process the data using the data range given in the article(40w->25w)
+##voltage in [2.4,3]
+##humidity in [0, 100]
+df_net_log_NA_filter = df_net_log_NA%>%filter(voltage<3,voltage>2.4,humidity>16.4,humidity<102)
+df_log_filter = df_log%>%filter(humidity>16.4,humidity<100.2)
+#use inner join to filter outlier nodeid(41w->40w)
+df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("nodeid"="ID"))
+
 ```
 
-## Including Plots
+# **Histogram Checking**
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, fig.width = 4,fig.height = 3,fig.align="center"}
+#histogram
+#Use origin data
+#1)overall review
+# Represent it
+library(ggplot2)
+p <- df_net_log %>%
+  ggplot(aes(x=actual_date, fill=type)) +
+    geom_bar( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+# Format : Week
+scale_x_date(labels = date_format("%m/%d"),breaks = '5 days') +
+  theme(axis.text.x = element_text(angle=45))+
+  labs(title = "Data Distribution over Time by Log and Net")
+p
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
