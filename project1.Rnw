@@ -379,7 +379,7 @@ df_out = df_net_log_NA_dup_volt_filter_loc%>%filter(humidity>53.1&type == 'net'|
 
 \subsection{3a}
 <<>>=
-df_out$hour = format(as.POSIXct(df_out$actual_time), format="%H")
+df_out$hour = as.numeric(format(as.POSIXct(df_out$actual_time), format="%H"))
 df_out_3_1 = df_out %>%
   filter(hour<=18&hour>=10)
 df_out_3_2 = df_out %>%
@@ -614,6 +614,41 @@ z=~PC3, color=~cluster_gmm) %>%
 )
 print(p2)
 @
+
+\section{4c}
+<<>>=
+#temperature and humidity
+library(maditr)
+df_out_time1 = df_out%>%filter(actual_date >= '2004-04-27', actual_date<'2004-05-09')%>%mutate(period = '04-27 to 05-09')
+df_out_time2 = df_out%>%filter(actual_date >= '2004-05-09', actual_date<'2004-05-21')%>%mutate(period = '05-09 to 05-21')
+df_out_time3 = df_out%>%filter(actual_date >= '2004-05-21', actual_date<='2004-06-02')%>%mutate(period = '05-21 to 06-02')
+
+df_period = rbind(df_out_time1, df_out_time2, df_out_time3)
+df_period$actual_second = format(as.POSIXct(df_period$actual_time), format="%H:%M:%S")
+df_period = df_period%>%select(humid_temp, humidity, hamatop, hamabot, Height, actual_second, period)%>%melt(id = c("Height", "period", "actual_second"))
+
+period_humid_mean<-dcast(df_period%>% filter(variable == "humidity"), 
+                        Height + period + actual_second ~ variable,
+                        fun.aggregate = mean)
+period_humid_mean$actual_second = strptime(period_humid_mean$actual_second,format='%H:%M:%S')
+
+t1 = ggplot(period_humid_mean) + 
+  geom_point(mapping = aes(x = actual_second, y = humidity,color=Height),size=0.5)+ 
+  scale_color_gradient(high='red',low='green')+
+  labs(x='Hours',y='Humidity',color='Height')+
+  facet_grid(.~period)+
+  theme(title=element_text(size = 20),
+        axis.title = element_text(size = 19),
+        axis.text = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.title=element_text(size=16),
+        strip.text.x=element_text(size=16),
+        axis.text.x=element_text(angle = 90),
+        axis.title.x=element_blank())
+
+t1
+@
+
 \section{4b}
 
 \section{Data cleaning (40 pts)}
