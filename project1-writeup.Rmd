@@ -813,7 +813,7 @@ ggarrange(p7, p8,
 
 3 [c] represents the horizontal box plot distribution of the measured values over time. The graphs can be seen to be unconvincing due to temporal mixing effects, but the problem is resolved in 3d. However, the authors plot height as a categorical variable at equidistant distances on the y-axis, so we think it should be clarified to the reader to prevent the misconception that y-values are proportional to height. 3[d] eliminates the time effect by differencing the measurements at each node from their mean and plotting them in a box plot with height. Although these plots actually provide more information than 3[c], the title and axis text of 3[d] are too small to read and see because there are still many gaps in the horizontal direction.
 
-```{r,fig.width = 6,fig.height = 4,fig.align="center",fig.cap="Distribution of"}
+```{r,fig.width = 6,fig.height = 4,fig.align="center",fig.cap="Distribution of humidity, temperature, hamatop and hamatop in differen hours"}
 
 df_out_june = df_out%>%filter(actual_date=='2004-05-01')%>%mutate(hour = as.factor(hour))
 
