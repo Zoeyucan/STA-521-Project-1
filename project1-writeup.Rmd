@@ -6,8 +6,7 @@ output:
   pdf_document: default
   html_document:
     df_print: paged
-    fontsize: 11pt
-header-includes: \setlength\parindent{12pt}
+header-includes: \setlength\parindent{11pt}
 ---
 
 ```{r setup, include=FALSE}
