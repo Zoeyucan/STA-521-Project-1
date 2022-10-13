@@ -3,6 +3,7 @@ title: "Redwood"
 author: "Xinyi Sheng, Yucan Zeng"
 date: '2022-10-11'
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 header-includes: \setlength\parindent{12pt}
@@ -44,7 +45,7 @@ Moreover, TASK and TinySQL software serve as the framework for collecting and pr
 ## b.
 ### **i.Sensor Deployment Mode**
 
-Time: Early summer for one month, with all sensors sampled every 5 minutes. Early summer contains the most dynamic microclimate changes. We decided that sampling every 5 minutes would be sufficient to capture this variability. Vertical distance: from 15 meters from the ground to 70 meters from the ground, with a spacing of about 2 meters between nodes. This spatial density ensured that we could cap the gradients in sufficient detail to interpolate with accuracy. envolop starts at 15 m because most of the foliage is in the upper part of the tree. Angular position: west side of the tree. The western side of the tree has a thicker canopy and provides the greatest buffer against direct environmental impacts. Radial distance: 0.1-1.0 m from the trunk. These nodes were placed very close to the trunk to ensure that we capture microclimate trends that directly affect the tree, rather than the broader climate. Figure 1 shows the final location of each mote in the tree. We also placed several nodes outside of the angular and radial envelopes to monitor microclimate near other previously installed biosensing devices.
+Since early summer contains the most dynamic microclimate variability, we decided that sampling all sensors every 5 minutes would be sufficient to capture this variability for a month. tolle placed the sensors from 15 m above ground to 70 m above ground, with a spacing between nodes of approximately 2 m. This spatial density ensured that we could capture the gradients in sufficient detail to interpolate accurately. Simultaneous placement of the envolop starts at 15 m because most of the leaves are in the upper part of the tree. We primarily measured the western side of the tree, which has a thicker canopy and provides the greatest buffer against the direct effects of the environment. Not only that, but we also placed the sensors 0.1-1.0 m away from the trunk of the tree. These nodes were placed very close to the trunk to ensure that we captured the microclimate trends that directly affect the tree rather than the broader climate. figure 1 in the Tolle article shows the final position of each node in the tree. We also placed several nodes outside of the angular and radial envelopes to monitor microclimate near other previously installed biosensing devices.
 
 ### **ii.Summary of the Dataset**
 
@@ -102,7 +103,7 @@ df_net_log_NA_filter_loc = df_net_log_NA_filter%>%inner_join(df_loc,by = c("node
 
 ## **a.Check Histogram**
 
-Before plotting the histogram, we initially filtered the variables according to the article table1 range for each sensor and range of voltage, removed the NA, controlled the locallog voltage at (2.4, 3), network voltage at (200, 250), then controlled the temperature at (6.6, 32.6) and humidity at (16.4, 100.2). Also, because the time is a trash, we also corrected the time.
+Before plotting the histogram, we initially filtered the variables according to the  range in Tolle's table1 for each sensor and range of voltage, removed the NA, controlled the local log voltage at (2.4, 3), network voltage at (200, 250), then controlled the temperature at (6.6, 32.6) and humidity at (16.4, 100.2). Also, because the time is a trash, we also corrected the time.
 
 
 ```{r, fig.width = 6,fig.height = 3,fig.align="center",fig.cap="Data Distribution over Time by Log and Net"}
@@ -121,8 +122,7 @@ scale_x_date(labels = date_format("%m/%d"),breaks = '5 days') +
   labs(title = "")
 p
 ```
-We use the raw data to plot the number of measurements recorded by loggers and networks for each period. Figure 1 shows that the network data are missing and only appear from May 7 to June 2. locallog data decreased on May 5 and May 6, and on May 26. Next, we made histograms of the number of measurements recorded by the logger and the network for each period for voltage, humidity, temperature, hamatop, and hamabot, respectively. It is obvious that in the voltage distribution, the network data is very problematic, and the locallog data is concentrated around 0. And we find that the value 200 to 300 is taken when filtering the network because if we go beyond this range we can only see the locallog and the network value is not useful. Also, we can clearly see from the locallog and network two graphs that the units of voltage are not the same, so we performed the operation of converting the voltage. In the humidity histogram, we can see that locallog records data evenly distributed at each humidity value, but network logger records more data at humidity greater than 50, and we speculate that network logger may not be sensitive enough for smaller humidity. In the temperature histogram, both locallog and network data are well recorded. Since hamatop and hamabot only record data when there is light, it is reasonable that most of the data of hamatop and hamabot are recorded near 0.
-
+We use the raw data to plot the number of measurements recorded by loggers and networks for each period. Figure 1 shows that the network data are missing and only appear from May 7 to June 2. Locallog data decreased on May 5 and May 6, and on May 26. Next, we made histograms of the number of measurements recorded by the logger and the network for each period for voltage, humidity, temperature, hamatop, and hamabot, respectively. It was obvious that in the voltage distribution, the network data was very problematic, and the locallog data was concentrated around 0. And we found that the value 200 to 300 was taken when filtering the network because if we go beyond this range we can only see the locallog and the network value was not useful. Also, we can clearly see from the locallog and network two graphs that the units of voltage are not the same, so we performed the operation of converting the voltage. In the humidity histogram, we can see that locallog records data evenly distributed at each humidity value, but network logger recorded more data at humidity greater than 50, and we speculated that network logger may not be sensitive enough for smaller humidity. In the temperature histogram, both locallog and network data were well recorded. Since hamatop and hamabot only recorded data when there is light, it was reasonable that most of the data of hamatop and hamabot were recorded near 0.
 ```{r,warning=FALSE,fig.show="hide"}
 #histogram
 #2)voltage
@@ -173,7 +173,7 @@ ggarrange(p1, p2, p3, p4, p5, p6,
 ```
 ## **b.Remove Missing Value**
 
-After viewing the dataset we ensured the best analysis of the data by removing NA, outluers, duplicates and filtering the ranges of the variables. First, we drop the rows containing NA, and then we filter the data for duplicate rows of epoc and nodeid, keeping only one row. Since the network voltages were converted to adc, we divided the network voltage data by the conversion factor. Next, we replicated the voltage filtering steps outlined in Tolle's paper, removing entries with voltages greater than 3V or less than 2.4V, and filtering the data according to the data range in table1 in the paper. Finally we filtered out the anomalous sensors using moto-location-data.We use table 1 to show the data filtering process.
+After viewing the dataset we preprocessed data by removing NA, outliers, duplicates and filtering the ranges of the variables. First, we dropped the rows containing NA, and then we filtered the data for duplicated rows of epoch and nodeid, keeping only one row. Since the network voltages were converted to ADC, we divided the network voltage data by the conversion factor. Next, we replicated the voltage filtering steps outlined in Tolle's paper, removing entries with voltages greater than 3V or less than 2.4V, and filtering the data according to the data range in table1 in the paper. Finally we filtered out the anomalous sensors using "moto-location-data".
 
 
 
@@ -304,16 +304,19 @@ geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+
   scale_fill_brewer(palette="YlOrRd")+
   labs(title = 'boxplot of hamabot_ppfd')
 ```
-Tolle's article mentions the problems associated with outliers corresponding to the measurement range of humidity, and we also found when looking at the histogram data that humidity less than 0 and temperature up to 100 degrees are obvious outliers that do not correspond to reality, so these data should be excluded from the analysis.
+
+Tolle's article mentions the problems associated with outliers corresponding to the measurement range of humidity, and we also found when looking at the histogram data that humidity less than 0 and temperature up to 100 degrees are obvious outliers that do not correspond to reality, so we dropped these data.
+
 ```{r,fig.align="center",fig.width = 6,fig.height=4,fig.cap="Boxplots"}
 #multiplot
 ggarrange(b1,b2,b3,b4, 
           ncol = 2, nrow = 2)
 ```
-In the box line plot, firstly for humidity, we filtered only the readings with quantile at (0, 0.02). Secondly, for the temperature boxplot we filtered the quantile readings at (0.98, 1). And we also screened the data for hamatop and hamabot at (0.98, 1). In the humidity boxplot, the mean value of network is larger than the mean value of locallog exactly in line with our guess that the network sensor is not sensitive to lower humidity and may be missing a large number of readings. In the box line plots of hamatop and hamabot it is obvious that the readings are heavily concentrated around 0, so the box line plots would have more outliers. Because there is a large amount of time without sunlight, resulting in 0 readings, we do not remove a large number of outliers considering the specificity of the data.
+
+According to the boxplots, for humidity, we filtered only the readings with quantile at (0, 0.02). Secondly, for temperature, we filtered out the quantile at (0.98, 1). And  for hamatop and hamabot, we also filtered out the quantile at (0.98, 1). In the humidity boxplot, the mean value of network is larger than the mean value of local log exactly in line with our guess that the network sensor is not sensitive to lower humidity and may miss a large number of readings. In the boxplots of hamatop and hamabot it is obvious that the readings are heavily concentrated around 0, so the boxplots would have more outliers. Because there is a large amount of time without sunlight, resulting in 0 readings, we do not remove them considering the specificity of the data.
 
 
-In addition to using the filtering conditions given in the article, we also converted the battery voltage of the network sensor by a factor during data processing, thus further removing the outliers instead of simply discarding that part of the data or leaving it unprocessed.
+In addition to using the filtering range given in the article, we also converted the battery voltage of the network sensor by a coefficient during data processing, thus further removing the outliers instead of simply dropping that part of the data or leaving it unprocessed.
 
 
 
@@ -321,7 +324,7 @@ In addition to using the filtering conditions given in the article, we also conv
 
 ## **a.Pairwise Analysis**
 
-Three different time periods were chosen: 6 am to 9 am (sunrise time), 10 pm to 18 pm, and 17 pm to 20 pm (sunset time). These three time periods were chosen because it is clear in Figure 4 of the Tolle’s article that there are spatial and temporal trends in humidity and temperature during these three time periods, and intuitively, these two variables change dramatically at sunrise and sunset, and we wanted to find and quantify the relationship between temperature and humidity. At the same time, humidity and temperature show small and dramatic fluctuations at midday, so we chose to explore the potential correlation between humidity and temperature during the three time periods.
+We choose three different time periods: 6 am to 9 am (sunrise time), 10 pm to 18 pm, and 17 pm to 20 pm (sunset time). Because it is clear in Figure 4 of the Tolle’s article that there are spatial and temporal trends in humidity and temperature during these three time periods, and intuitively, these two variables change dramatically at sunrise and sunset, and we wanted to find and quantify the relationship between temperature and humidity. At the same time, humidity and temperature show dramatic fluctuations at noon, so we explored the potential correlation between humidity and temperature during the three time periods.
 
 
 ```{r}
@@ -375,12 +378,12 @@ ggarrange(a1,a2,a3,
           ncol = 3, nrow = 1)
 ```
 
-The pairwise scatter plot of humidity and temperature shows a relationship between temperature and humidity. We can see that as the temperature rises, the humidity decreases. There is a linear relationship between temperature and humidity at sunrise and noon. However, the trend is logarithmic at sunset.
+The pairwise scatter plot of humidity and temperature shows a relationship between temperature and humidity. As can be seen, when the temperature rises, the humidity decreases. There is a linear relationship between temperature and humidity at sunrise and noon. However, the trend is logarithmic at sunset.
 
 
 ## **b.Correlation**
 
-We created correlation plots based on our three time periods to recognize any of the predictors associated with Incident PAR. It is evident that Incident PAR has a medium correlation with Reflect PAR, and the closer they are to sunset, the more robust the correlation is. In addition, Incident PAR has a weak correlation with temperature, and the correlation coefficient is more significant during the day than at night.
+We created correlation plots based on the three time periods mention above to recognize any predictors associated with incident PAR (hamatop). It is evident that Incident PAR has a medium correlation with reflected PAR (hamabot), and the closer they are to sunset, the more robust the correlation is. In addition, Incident PAR has a weak correlation with temperature, and the correlation coefficient is more significant during the day than at night.
 
 ```{r,fig.show="hide"}
 #correlation
@@ -468,7 +471,7 @@ tim4 = ggplot(df_out_height, aes(x = actual_time, y = hamabot*0.0185)) +
 ```{r,fig.align="center",fig.width = 8,fig.height=6,fig.cap="Time series"}
 ggarrange(tim1,tim2,tim3,tim4,  ncol = 1, nrow = 4)
 ```
-We want to evaluate the daily cycles of climatic measures after looking at the hourly pattern of measurements within a day to determine if those readings were noticeably changed from April 27 to June 10. The temperature was not steady during the investigation period, as can be shown from time series plots. The average temperatures in May's first and last weeks were much warmer than those in the middle of the month. Because of the large climatic change over time, it may be difficult to generalize the findings, and the data from May 1st in the earlier portion of the investigation may not be accurate. Additionally, the structure of the humidity time series was roughly inverse to the temperature, which would have pointed to a negative association. In addition, we can still see that both the incident PAR and the reflected PAR had a clear seasonal pattern that also corresponded to how sunlight behaves. The radiation variables incident PAR and reflected PAR, unlike temperature and humidity, behaved consistently from day to day with the exception of May 7 and May 27, when PAR and RPAR were much lower, possibly due to rain or clouds.
+We want to evaluate the daily cycles of climatic measures after looking at the hourly pattern of measurements within a day to determine if those readings were noticeably changed from April 27 to June 10. The temperature was not steady during the investigation period, as can be shown from time series plots. The average temperatures in May's first and last weeks were much warmer than those in the middle of the month. Because of the large climatic change over time, it may be difficult to generalize the findings, and the data from May 1st in the earlier portion of the investigation may not be accurate. Additionally, the structure of the humidity time series was roughly inverse to the temperature. We also can still see that both the incident PAR and the reflected PAR had a clear seasonal pattern that also corresponded to how sunlight behaves. The incident PAR and reflected PAR, behaved consistently from day to day with the exception of May 7 and May 27, and when PAR and RPAR were much lower, possibly due to rain or clouds.
 
 ## **d.PCA**
 
@@ -532,6 +535,8 @@ We found that temperature and humidity were more dominant in the PC1 direction, 
 
 ## **finding 1**
 
+We reduced five features into three denoted by PC1, PC2, and PC3 by cluster,  and divided them into six layers according to height range, which shows that PCA is appropriate for dimension reduction in this case. We found the elbow by the WCSS method and decided that it should be divided into 3 clusters. To verify the clustering performance, we use k-means and GMM. We can see that the results obtained by these two clustering methods are not consistent, but it is obvious that they are divided into 3 clusters, which indicates that our PC1 PC2, and PC3 have very strong interpretability.
+
 ```{r,fig.align="center",fig.width = 5,fig.height=3,fig.cap="Clusters of Clients"}
 #
 wcss <- vector()
@@ -571,7 +576,7 @@ z=~PC3, color=~cluster_gmm) %>%
     scene = list(bgcolor = "#e5ecf6")
 )
 ```
-We downscale the 5 variables into pc1 to pc3 by cluster and divide them into 6 layers according to height range, which shows that PCA is very good at downscaling. We find the elbow by WCSS method and find that it is divided into 3 clusters. To verify the division into 3 clusters, we use k-means and GMM for clustering, and we can see that the results obtained by these two clustering methods are not consistent, but it is obvious that they are divided into 3 clusters, which indicates that our PC1 to PC3 have very strong interpretability.
+
 
 
 
@@ -639,7 +644,7 @@ ggarrange(s1, s2, s4, s5 ,
 
 ```
 
-At different altitudes, humidity and sensor temperature are negatively correlated. For sensors placed higher, lower humidity coupled with higher PAR usually implies higher temperature, rather than just explaining the change in temperature with humidity. In our data exploration, we hypothesized that temperature and humidity are negatively correlated. We set above 50 m as high, 40-50 m as middle, and below 40 m as height close to the ground, and we placed sensors less than 1 m from the trunk as close and greater than 1 m as far. Figure A shows the relationship between temperature and humidity and height. When the temperature is low, these points are dominated by yellow, and most of the sensors are placed in high places, which also indicates that the humidity is high. When the temperature is high, the dots are predominantly blue and the sensors are mostly placed at low locations, which also indicates low humidity. Figure B shows the relationship between temperature and humidity and sensor placement distance. When the temperature is low, these dots are predominantly green and the sensors are mostly placed close to the tree trunk, which also indicates higher humidity. When the temperature is higher, the dots are mainly yellow and the sensors are mostly placed far from the tree trunk, which also indicates higher humidity. In addition, we also found that when the sensors were placed high, more sunlight was incident on the tree, indicating that the leaves at higher locations received higher sunlight and therefore grew more densely, while more sunlight was reflected near the tree trunk.
+At different heights, humidity and temperature are negatively correlated. For sensors placed higher, lower humidity will usually as the change of height and distance higher temperature. In our data exploration, we hypothesized that temperature and humidity are negatively correlated. We set above 50 m as high, 40-50 m as middle, and below 40 m as height close to the ground, and we placed sensors less than 1 m from the trunk as close and greater than 1 m as far. Figure A shows the relationship between temperature and humidity and height. When the temperature is low, these points are dominated by yellow, and most of the sensors are placed in high places, which also indicates that the humidity is high. When the temperature is high, the dots are predominantly blue and the sensors are mostly placed at low locations, which also indicates low humidity. Figure B shows the relationship between temperature and humidity and sensor placement distance. When the temperature is low, these dots are predominantly green and the sensors are mostly placed close to the tree trunk, which also indicates higher humidity. When the temperature is higher, the dots are mainly yellow and the sensors are mostly placed far from the tree trunk, which also indicates higher humidity. In addition, we also found that when the sensors were placed high, more sunlight was incident on the tree, indicating that the leaves at higher locations received higher sunlight and therefore grew more densely, while more sunlight was reflected near the tree trunk.
 
 
 
@@ -769,7 +774,7 @@ r3 = ggplot(period_temp_mean3) +
 knitr::include_graphics("2p.png")
 #![PCA](PCA.png)
 ```
-The graph shows that the temperature was particularly high and the humidity was particularly low around May 3 and May 30. Since temperature and humidity vary considerably between dates, we divided the study period into 3 time intervals: 4/27 - 5/9, 5/10-5/21, and 5/22-6/2, and calculated the average temperature during these three time intervals to obtain 3 different hourly trends of temperature and humidity. Although the average humidity and temperature levels were different for these 3 periods, the change patterns were similar. Basically, the temperature started to increase and the humidity started to decrease from around 7:00 am, the temperature reached its maximum and the humidity reached its minimum around 3:00 pm, and then the temperature gradually decreased and the humidity gradually increased into the evening. However, in the humidity from April 27 to May 9, the daytime humidity is higher than the evening humidity, and then from May 21 to June 2 the daytime humidity is lower than the evening humidity. When we color-coded the data points by height, height did not appear to be a spatial confounder of temperature and humidity, except for the period April 27 through May 9. During this period, height was positively correlated with temperature and negatively correlated with humidity. And there were fewer sensor nodes working between May 21 and June 2, so the average points for that period were not as stable as before.
+The graph shows that, particularly, the temperature was high and the humidity was low around May 3 and May 30. Since temperature and humidity vary considerably between different period, we divided 37 days into 3 time period: 4/27 - 5/9, 5/10-5/21, and 5/22-6/2, and calculated the average temperature and humidity every hour during these three time period to obtain 6 different hourly trends. Although the average humidity and temperature levels were different for these 3 periods, the change patterns were similar. Basically, the temperature started to increase and the humidity started to decrease from around 7:00 am, the temperature reached its maximum and the humidity reached its minimum around 3:00 pm, and then the temperature gradually decreased and the humidity gradually increased around the sunset time. However, from April 27 to May 9, the daytime humidity is higher than the evening humidity, and then from May 21 to June 2 the daytime humidity is lower than the evening humidity. When we divided the data points by height, it did not appear to be a spatial confounder of temperature and humidity, except for the period April 27 through May 9. During this period, height was positively correlated with temperature and negatively correlated with humidity. And there were fewer sensor nodes working between May 21 and June 2, so the average points for that period were not as stable as before.
 
 
 
@@ -796,7 +801,8 @@ p8 <- df_net_log %>%mutate(hamabot_ppfd=0.0185*hamabot)%>%filter(hamabot_ppfd>=0
     labs(title ="Remove Long-tail of Hamabot")
 
 ```
-Figure 3 [a] in Tolle's article examines the univariate distributions of temperature, humidity, incident PAR, and reflected PAR. Although these graphs clearly show the distributions, the temperature plots are too widely spaced on the x-axis, resulting in a unimodal distribution for temperature, while there may be multiple modal distributions around 10,so we removed the long-tail of incident PAR and reflected PA by using a logarithmic transformation.
+
+Figure 3 [a] in Tolle's article examines the univariate distributions of temperature, humidity, incident PAR, and reflected PAR. Although these graphs clearly show the distributions, the temperature plots are too widely spaced on the x-axis, resulting in a unimodal distribution for temperature. At the same time, there may be multiple modal distributions around 10, so we removed the long-tail of incident PAR and reflected PAR by using a log() transformation.
 
 ```{r,fig.width = 6,fig.height = 3,fig.align="center"}
 ggarrange(p7, p8, 
@@ -829,12 +835,11 @@ The boxplot in 3(c) shows the relationship between heights and the value of temp
 
 ## **c.**
 
-The left plot in Figure 4 shows the temperature, humidity, event PAR, and reflected PAR over time for May 1, 2004. Each line indicates a different sensor particle with a different color in the first two plots. In addition, there is a vertical line marking the sharp change in slope. legend should contain a legend indicating that different colors represent different nodes, otherwise if there is no legend, then legend should use only one color. In the plots of PAR and reflected PAR, the report does not assign different colors according to the different sensors, which is inconsistent with the first two plots. On the right, the scatter plot shows the relationship between the four measurements and the height variable. The scatter has two different colors, which should be specified in the legend in addition to the scatter plot
-In general, the plot tries to convey the relationship between measurements, time and height. We should also reduce the range of the y-axis, using ylim to make the range smaller.
+The left plot in Figure 4 shows the temperature, humidity, incident PAR, and reflect PAR over time on May 1, 2004. Each line indicates a different sensor with a different color in the first two plots. In addition, there is a vertical line marking the sharp change in slope. These plot should add a legend that indicates different colors to represent different nodes, because if there is no legend, then the plot should use only one color. In the plots of PAR and reflected PAR, the report does not assign different colors according to the different sensors, which is inconsistent with the first two plots. On the right of Figure 4, the scatter plot shows the relationship between the four measurements and the height variable. The scatter has two different colors, which should be specified in the legend in addition to the scatter plot. In general, the plot tries to convey the relationship between measurements, time and height. We should also reduce the range of the y-axis, using ylim to make the range smaller.
 
 ## **d.**
 
-It is possible to combine network and locallog data and plot them on the same graph using two different colors.
+It is possible to combine network and local log data and plot them on the same graph using two different colors.
 
 # **Conclusion**
 
