@@ -1,11 +1,12 @@
 ---
-title: "Redwood"
+title: "PROJ1 write-up"
 author: "Xinyi Sheng, Yucan Zeng"
 date: '2022-10-11'
 output:
   pdf_document: default
   html_document:
     df_print: paged
+    fontsize: 11pt
 header-includes: \setlength\parindent{12pt}
 ---
 
