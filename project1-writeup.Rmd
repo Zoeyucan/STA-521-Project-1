@@ -125,14 +125,12 @@ p2 <- df_net_log %>%filter((type == 'log' & voltage<3 & voltage>2.4))%>%
   ggplot(aes(x=voltage, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c("#69b3a2")) +
-    theme_ipsum() +
     labs(fill="")
 p2
 p2_ <- df_net_log %>%filter((type == 'net' & voltage<250 & voltage>200))%>%
   ggplot(aes(x=voltage, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c( "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 p2_
 ```
@@ -144,7 +142,6 @@ p3 <- df_net_log %>%filter(humidity>16.4 & humidity<100.2)%>%
   ggplot(aes(x=humidity, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 p3
 ```
@@ -156,7 +153,6 @@ p4 <- df_net_log %>%filter(humid_temp>6.6&humid_temp<32.6)%>%
   ggplot(aes(x=humid_temp, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 p4
 ```
@@ -168,7 +164,6 @@ p5 <- df_net_log %>%mutate(hamatop_ppfd=0.0185*hamatop)%>%filter(hamatop_ppfd>=0
   ggplot(aes(x=hamatop_ppfd, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 p5
 ```
@@ -180,7 +175,6 @@ p6 <- df_net_log %>%mutate(hamabot_ppfd=0.0185*hamabot)%>%filter(hamabot_ppfd>=0
   ggplot(aes(x=hamabot_ppfd, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 p6
 ```
@@ -245,7 +239,6 @@ h1 <- df_net_log %>%
   ggplot(aes(x=humidity, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 h1
 ```
@@ -257,7 +250,6 @@ h2 <- df_net_log %>%
   ggplot(aes(x=humid_temp, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 h2
 ```
@@ -269,7 +261,6 @@ h3 <- df_net_log %>%
   ggplot(aes(x=hamatop, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 h3
 ```
@@ -281,7 +272,6 @@ h4 <- df_net_log %>%
   ggplot(aes(x=hamabot, fill=type)) +
     geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    theme_ipsum() +
     labs(fill="")
 h4
 ```
@@ -292,22 +282,31 @@ h4
 
 # loading data set and storing it in ds variable
 
-df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humidity, fill = type)) +
-geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of humidity')
+df_net_log_NA_dup_volt_filter_loc%>%
+  ggplot(aes(x = type, y = humidity, fill = type)) +
+  geom_boxplot(outlier.colour="black", outlier.shape=16,outlier.size=2)+
+  scale_fill_brewer(palette="Dark1")+
+  labs(title = 'boxplot of humidity')
 ```
 
 ```{r}
 df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humid_temp, fill = type)) +
-geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of temperature')
+geom_boxplot(outlier.colour="black", outlier.shape=16,outlier.size=2)+
+  scale_fill_brewer(palette="Dark1")+
+  labs(title = 'boxplot of temperature')
 ```
 
 ```{r}
 df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamatop, fill = type)) +
-geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamatop_ppfd')
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+
+  scale_fill_brewer(palette="Dark1")+
+  labs(title = 'boxplot of hamatop_ppfd')
 ```
 
 ```{r}
 df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamabot, fill = type)) +
-geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamabot_ppfd')
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+
+  scale_fill_brewer(palette="Dark1")+
+  labs(title = 'boxplot of hamabot_ppfd')
 ```
 
