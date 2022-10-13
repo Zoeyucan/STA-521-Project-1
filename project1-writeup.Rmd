@@ -118,3 +118,196 @@ scale_x_date(labels = date_format("%m/%d"),breaks = '5 days') +
 p
 ```
 
+```{r}
+#histogram
+#2)voltage
+p2 <- df_net_log %>%filter((type == 'log' & voltage<3 & voltage>2.4))%>%
+  ggplot(aes(x=voltage, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2")) +
+    theme_ipsum() +
+    labs(fill="")
+p2
+p2_ <- df_net_log %>%filter((type == 'net' & voltage<250 & voltage>200))%>%
+  ggplot(aes(x=voltage, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c( "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p2_
+```
+
+```{r}
+#histogram
+#3)humidity
+p3 <- df_net_log %>%filter(humidity>16.4 & humidity<100.2)%>%
+  ggplot(aes(x=humidity, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p3
+```
+
+```{r}
+#histogram
+#4)temperature
+p4 <- df_net_log %>%filter(humid_temp>6.6&humid_temp<32.6)%>%
+  ggplot(aes(x=humid_temp, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p4
+```
+
+```{r}
+#histogram
+#5)hamatop
+p5 <- df_net_log %>%mutate(hamatop_ppfd=0.0185*hamatop)%>%filter(hamatop_ppfd>=0&hamatop_ppfd<=2154)%>%
+  ggplot(aes(x=hamatop_ppfd, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p5
+```
+
+```{r}
+#histogram
+#5)hamabot
+p6 <- df_net_log %>%mutate(hamabot_ppfd=0.0185*hamabot)%>%filter(hamabot_ppfd>=0&hamabot_ppfd<=180)%>%
+  ggplot(aes(x=hamabot_ppfd, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+p6
+```
+
+# **Remove Missing Value**
+
+```{r}
+#read data
+df_net = read.csv("data/sonoma-data-net.csv",header=TRUE,stringsAsFactors=FALSE)
+df_log = read.csv("data/sonoma-data-log.csv",header=TRUE,stringsAsFactors=FALSE)
+df_loc = read.csv('data/mote-location-data.txt',header=TRUE,stringsAsFactors=FALSE,sep='')
+
+#concert to tibble
+df_net = tibble(df_net)
+df_log = tibble(df_log)
+
+#add a new column to distinguish between net and log
+df_net = df_net%>%mutate(type = 'net')
+df_log = df_log%>%mutate(type = 'log')
+
+#correct log time
+df_net = df_net%>%mutate(actual_time= result_time)
+df_log = df_log%>%mutate(actual_time= as.POSIXct("2004-04-27 17:10:00")+epoch*300)
+
+#extract date
+df_net$actual_date = as.Date(format(as.POSIXct(df_net$actual_time), format="%Y-%m-%d"))
+df_log$actual_date = as.Date(format(as.POSIXct(df_log$actual_time), format="%Y-%m-%d"))
+
+#merge df_log and df_net
+df_net_log = rbind(df_log, df_net)
+
+#Drop NAs
+df_net_log_NA = df_net_log%>%na.omit()
+
+#remove duplicate
+df_net_log_NA_dup = 
+  df_net_log_NA[!duplicated(df_net_log_NA[,c(2,3,12)]),]
+
+#Handle voltage outliers
+df_net_log_NA_dup_volt = df_net_log_NA_dup%>%
+  mutate(voltage_new = ifelse(type == 'net', voltage/83, voltage))
+
+#Process the data using the data range given in the article(40w->25w)
+##voltage in [2.4,3]
+##humidity in [16.4, 100.2]
+#ppfd of hamatop in[0,2154]
+#ppfd of hamabot in[0,180]
+df_net_log_NA_dup_volt_filter = df_net_log_NA_dup_volt%>%filter(
+                                                voltage_new<3,voltage_new>2.4,
+                                              humidity>16.4,humidity<100.2,
+                                              humid_temp>6.6,humid_temp<32.6,
+                                              0.0185*hamatop<2154,hamatop>=0,
+                                              0.0185*hamabot<180,hamabot>=0)
+```
+
+# **Identify Outliers**
+
+```{r}
+#histogram
+#1)humidity
+h1 <- df_net_log %>%
+  ggplot(aes(x=humidity, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',binwidth = 5) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h1
+```
+
+```{r}
+#histogram
+#2)temperature
+h2 <- df_net_log %>%
+  ggplot(aes(x=humid_temp, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h2
+```
+
+```{r}
+#histogram
+#3)hamatop
+h3 <- df_net_log %>%
+  ggplot(aes(x=hamatop, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h3
+```
+
+```{r}
+#histogram
+#4)hamabot
+h4 <- df_net_log %>%
+  ggplot(aes(x=hamabot, fill=type)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity',bins = 10) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    theme_ipsum() +
+    labs(fill="")
+h4
+```
+
+```{r}
+#boxplot
+#huimidity, temperture, hamatop, hamabot
+
+# loading data set and storing it in ds variable
+
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humidity, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of humidity')
+```
+
+```{r}
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = humid_temp, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of temperature')
+```
+
+```{r}
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamatop, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamatop_ppfd')
+```
+
+```{r}
+df_net_log_NA_dup_volt_filter_loc%>%ggplot(aes(x = type, y = 0.0185*hamabot, fill = type)) +
+geom_boxplot(outlier.colour="black", outlier.shape=16, outlier.size=2)+scale_fill_brewer(palette="Dark1")+labs(title = 'boxplot of hamabot_ppfd')
+```
+
